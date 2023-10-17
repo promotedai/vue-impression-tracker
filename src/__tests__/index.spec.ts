@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import MockLayout from "./mockLayout.vue";
 import { beforeEach, vi } from "vitest";
+import { v4 as uuid } from "uuid";
 
 let onChange: IntersectionOnChange | null = null;
 
@@ -47,7 +48,12 @@ describe("impressions", () => {
   it("fires after duration", () => {
     const logImpression = vi.fn();
     mount(MockLayout, {
-      propsData: { contentId: "some-content-id", impressionId: "test-impression-id", logImpression },
+      propsData: {
+        uuid,
+        contentId: "some-content-id",
+        impressionId: "test-impression-id",
+        logImpression,
+      },
     });
 
     if (!onChange) {
@@ -71,6 +77,7 @@ describe("impressions", () => {
     const logImpression = vi.fn();
     mount(MockLayout, {
       propsData: {
+        uuid,
         contentId: "some-content-id",
         impressionId: "test-impression-id",
         insertionId: "test-insertion-id",
@@ -99,7 +106,12 @@ describe("impressions", () => {
   it("only fires onces for multiple views", () => {
     const logImpression = vi.fn();
     mount(MockLayout, {
-      propsData: { contentId: "some-content-id", impressionId: "test-impression-id", logImpression },
+      propsData: {
+        uuid,
+        contentId: "some-content-id",
+        impressionId: "test-impression-id",
+        logImpression,
+      },
     });
 
     if (!onChange) {
@@ -137,17 +149,47 @@ describe("impressions", () => {
   it("don't allow changing contentId", async () => {
     const logImpression = vi.fn();
     const wrapper = mount(MockLayout, {
-      propsData: { contentId: "some-content-id", impressionId: "test-impression-id", logImpression },
+      propsData: {
+        uuid,
+        contentId: "some-content-id",
+        impressionId: "test-impression-id",
+        logImpression,
+      },
     });
 
     if (!onChange) {
       throw new Error("IntersectionObserver onChange not mocked");
     }
 
-    await wrapper.setProps({ contentId: "some-new-content-id" });
+    await wrapper.setProps({
+      uuid,
+      contentId: "some-new-content-id",
+    });
     onChange([{ ...mockIntersectionEntry }]);
 
     vi.runOnlyPendingTimers();
     expect(logImpression).not.toBeCalled();
+  });
+
+  it("logImpressionFunctor only triggers logImpression once", async () => {
+    const logImpression = vi.fn();
+    const component = mount(MockLayout, {
+      propsData: {
+        uuid,
+        contentId: "some-content-id",
+        impressionId: "test-impression-id",
+        logImpression,
+      },
+    });
+
+    if (!onChange) {
+      throw new Error("IntersectionObserver onChange not mocked");
+    }
+
+    onChange([{ ...mockIntersectionEntry }]);
+    vi.runOnlyPendingTimers();
+    // @ts-ignore
+    component.vm.logImpressionFunctor();
+    expect(logImpression).toBeCalledTimes(1);
   });
 });

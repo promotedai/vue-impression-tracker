@@ -1,5 +1,4 @@
 import Vue from "vue";
-import { v4 as uuidv4 } from "uuid";
 
 // Simple logic for now.  A piece of content must have been continuously viewed
 // for the visibilityTimeThreshold.
@@ -31,83 +30,112 @@ export interface Impression {
 
 export default Vue.extend({
   data: function (): {
-    /* The contentId to log on the impressionId. Defaults to undefined. */
-    mixinContentId?: string;
-    /* The (pre-impression) insertionId to log on the impressionId. Defauls to undefined. */
-    mixinInsertionId?: string;
-    /* A generated impression ID */
-    mixinImpressionId: string;
+    /* Whether the impression tracker is active */
+    active: boolean;
     /* The IntersectionObserver instance */
     observer: IntersectionObserver | null;
     /* The visibility timer reference */
     timer: ReturnType<typeof setTimeout> | null;
     /* Whether we've logged an insertion for this piece of content */
     logged: boolean;
-    /* Used to set the default source type.  Defaults to 'DELIVERY' = 1. */
-    mixinDefaultSourceType?: ImpressionSourceTypeMap[keyof ImpressionSourceTypeMap] | ImpressionSourceTypeString;
   } {
     return {
+      active: true,
       observer: null,
-      mixinImpressionId: this.$props.impressionId || uuidv4(),
-      mixinInsertionId: this.$props.insertionId || undefined,
-      mixinContentId: this.$props.contentId,
       timer: null,
       logged: false,
-      mixinDefaultSourceType: this.$props.defaultSourceType || 1,
     };
   },
-  created: function () {
-    console.log("impressionTracker.created()");
+
+  props: {
+    contentId: {
+      type: String,
+      default: undefined,
+    },
+    insertionId: {
+      type: String,
+      default: undefined,
+    },
+    impressionId: {
+      type: String,
+      default: undefined,
+    },
+    handleError: {
+      type: Function,
+      default: () => console.error,
+    },
+    defaultSourceType: {
+      default: 1,
+    },
+    uuid: {
+      type: Function,
+      required: true,
+    },
   },
+
+  watch: {
+    contentId: function (newContentId: string, oldContentId: string) {
+      if (newContentId != oldContentId) {
+        this.active = false;
+        this.handleError(new Error("Detected contentId change, not supported."));
+      }
+    },
+  },
+
   mounted: function () {
-    console.log("impressionTracker.mounted()", this.mixinContentId, this.mixinImpressionId);
     const options = {
       root: null,
       margin: 0,
       threshold: DEFAULT_VISIBILITY_RATIO_THRESHOLD,
     };
+
+    if (!this.$props.insertionId && !this.$props.contentId) {
+      this.$props.handleError(new Error("insertionId or contentId should be set"));
+      return;
+    }
+
     if (
-      this.mixinContentId &&
+      this.$props.contentId &&
       typeof window !== "undefined" &&
       typeof (window as any).IntersectionObserver !== "undefined"
     ) {
       this.observer = new IntersectionObserver((entries) => {
         if (entries[0].intersectionRatio >= DEFAULT_VISIBILITY_RATIO_THRESHOLD && !this.logged) {
           this.timer = setTimeout(this.logImpressionFunctor, DEFAULT_VISIBILITY_TIME_THRESHOLD);
-        } else if (entries[0].intersectionRatio < DEFAULT_VISIBILITY_RATIO_THRESHOLD && !this.logged && this.timer) {
+        } else if (entries[0].intersectionRatio < DEFAULT_VISIBILITY_RATIO_THRESHOLD && this.timer) {
           clearTimeout(this.timer);
+          this.timer = null;
         }
       }, options);
       this.observer.observe(this.$el);
     }
   },
-  deactivated: function () {
-    console.log("impressionTracker.deactivated()");
-  },
   destroyed: function () {
-    console.log("impressionTracker.destroyed()");
     this.unload();
   },
   methods: {
     logImpressionFunctor() {
-      console.log("logImpressionFunctor");
+      if (this.logged || !this.active) {
+        return;
+      }
+
       this.logged = true;
 
       const impression: Impression = {
-        impressionId: this.mixinImpressionId,
-        sourceType: this.mixinDefaultSourceType,
+        impressionId: this.impressionId || this.$props.uuid(),
+        sourceType: this.$props.defaultSourceType,
       };
 
-      if (this.mixinInsertionId) {
-        impression.insertionId = this.mixinInsertionId;
+      if (this.$props.insertionId) {
+        impression.insertionId = this.$props.insertionId;
       }
-      console.log(this.mixinContentId, this.$props.contentId);
-      if (this.mixinContentId != this.$props.contentId) {
-        console.error("Content ID mismatch, not logging impression.");
+
+      if (!this.active) {
+        this.$props.handleError(new Error("Impression Tracker deactivated, not logging."));
         return;
       }
-      if (this.mixinContentId) {
-        impression.contentId = this.mixinContentId;
+      if (this.$props.contentId) {
+        impression.contentId = this.$props.contentId;
       }
       this.$props.logImpression && this.$props.logImpression(impression);
     },

@@ -15,6 +15,10 @@ defineProps({
     type: String,
     required: true,
   },
+  uuid: {
+    type: Function,
+    required: true,
+  },
 });
 </script>
 
