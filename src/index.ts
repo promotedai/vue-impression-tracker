@@ -28,6 +28,34 @@ export interface Impression {
   };
 }
 
+type HandleErrorFunction = (error: Error) => void;
+type UUIDFunction = () => string;
+
+type PropNames =
+  | "handleError"
+  | "uuid"
+  | "defaultSourceType"
+  | "contentId"
+  | "insertionId"
+  | "impressionId"
+  | "logImpression";
+
+type PropValues<T> = T extends "handleError"
+  ? HandleErrorFunction
+  : T extends "uuid"
+  ? UUIDFunction
+  : T extends "defaultSourceType"
+  ? ImpressionSourceTypeMap[keyof ImpressionSourceTypeMap] | ImpressionSourceTypeString
+  : T extends "contentId"
+  ? string
+  : T extends "insertionId"
+  ? string
+  : T extends "impressionId"
+  ? string
+  : T extends "logImpression"
+  ? (impression: Impression) => void
+  : never;
+
 export default Vue.extend({
   data: function (): {
     /* Whether the impression tracker is active */
@@ -38,12 +66,14 @@ export default Vue.extend({
     timer: ReturnType<typeof setTimeout> | null;
     /* Whether we've logged an insertion for this piece of content */
     logged: boolean;
+    typedProp: <T extends PropNames>(prop: T) => PropValues<T>;
   } {
     return {
       active: true,
       observer: null,
       timer: null,
       logged: false,
+      typedProp: (prop) => this.$props[prop],
     };
   },
 
@@ -67,6 +97,10 @@ export default Vue.extend({
     defaultSourceType: {
       default: 1,
     },
+    logImpression: {
+      type: Function,
+      default: undefined,
+    },
     uuid: {
       type: Function,
       required: true,
@@ -89,13 +123,13 @@ export default Vue.extend({
       threshold: DEFAULT_VISIBILITY_RATIO_THRESHOLD,
     };
 
-    if (!this.$props.insertionId && !this.$props.contentId) {
-      this.$props.handleError(new Error("insertionId or contentId should be set"));
+    if (!this.typedProp("insertionId") && !this.typedProp("contentId")) {
+      this.typedProp("handleError")(new Error("insertionId or contentId should be set"));
       return;
     }
 
     if (
-      this.$props.contentId &&
+      this.typedProp("contentId") &&
       typeof window !== "undefined" &&
       typeof (window as any).IntersectionObserver !== "undefined"
     ) {
@@ -122,22 +156,22 @@ export default Vue.extend({
       this.logged = true;
 
       const impression: Impression = {
-        impressionId: this.impressionId || this.$props.uuid(),
-        sourceType: this.$props.defaultSourceType,
+        impressionId: this.impressionId || this.typedProp("uuid")(),
+        sourceType: this.typedProp("defaultSourceType"),
       };
 
-      if (this.$props.insertionId) {
-        impression.insertionId = this.$props.insertionId;
+      if (this.typedProp("insertionId")) {
+        impression.insertionId = this.typedProp("insertionId");
       }
 
       if (!this.active) {
-        this.$props.handleError(new Error("Impression Tracker deactivated, not logging."));
+        this.typedProp("handleError")(new Error("Impression Tracker deactivated, not logging."));
         return;
       }
-      if (this.$props.contentId) {
-        impression.contentId = this.$props.contentId;
+      if (this.typedProp("contentId")) {
+        impression.contentId = this.typedProp("contentId");
       }
-      this.$props.logImpression && this.$props.logImpression(impression);
+      this.typedProp("logImpression") && this.typedProp("logImpression")(impression);
     },
     unload() {
       this?.observer?.unobserve(this.$el);
