@@ -130,11 +130,7 @@ export default Vue.extend({
       return;
     }
 
-    if (
-      this.typedProp("contentId") &&
-      typeof window !== "undefined" &&
-      typeof (window as any).IntersectionObserver !== "undefined"
-    ) {
+    if (typeof window !== "undefined" && typeof (window as any).IntersectionObserver !== "undefined") {
       this.observer = new IntersectionObserver((entries) => {
         if (entries[0].intersectionRatio >= DEFAULT_VISIBILITY_RATIO_THRESHOLD && !this.logged) {
           this.timer = setTimeout(this.logImpressionFunctor, DEFAULT_VISIBILITY_TIME_THRESHOLD);
@@ -166,10 +162,6 @@ export default Vue.extend({
         impression.insertionId = this.typedProp("insertionId");
       }
 
-      if (!this.active) {
-        this.typedProp("handleError")(new Error("Impression Tracker deactivated, not logging."));
-        return;
-      }
       if (this.typedProp("contentId")) {
         impression.contentId = this.typedProp("contentId");
       }
