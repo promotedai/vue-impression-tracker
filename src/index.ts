@@ -31,6 +31,8 @@ export interface Impression {
 type HandleErrorFunction = (error: Error) => void;
 type UUIDFunction = () => string;
 
+// It was necessary to manually type props through the typedProp data
+// function. Without this, Vue type anything in $props as any.
 type PropNames =
   | "handleError"
   | "uuid"
@@ -123,8 +125,8 @@ export default Vue.extend({
       threshold: DEFAULT_VISIBILITY_RATIO_THRESHOLD,
     };
 
-    if (!this.typedProp("insertionId") && !this.typedProp("contentId")) {
-      this.typedProp("handleError")(new Error("insertionId or contentId should be set"));
+    if (!this.typedProp("contentId")) {
+      this.typedProp("handleError")(new Error("contentId should be set"));
       return;
     }
 
