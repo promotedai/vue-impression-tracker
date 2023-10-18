@@ -1,6 +1,6 @@
 # vue-impression-tracker
 
-This library is used to track impressions using a Vue mixin. It currently support Vue 2 applications.
+This library is used to track impressions using a Vue mixin. It currently support Vue v2 applications.
 
 ## Mixin
 
