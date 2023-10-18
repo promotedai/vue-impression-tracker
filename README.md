@@ -4,17 +4,30 @@ This library is used to track impressions using a Vue mixin. It currently suppor
 
 ## Mixin
 
+This library defines a Vue Mixin which accepts props, generates an impression id, and calls your provided logImpression function when a piece of content is viewed. Include the Mixin in your component with the following code:
+
+### Tracked Component
+
 ```vue
 <script setup lang="ts">
 defineProps({
-  logImpression: {
-    type: Function,
-    required: true,
-  },
-  contentId: {
-    type: String,
-    required: true,
-  },
+  // Required props:
+  // The function to log the impression.
+  logImpression: Function,
+  // ID for the piece of content we are tracking,.
+  contentId: String,
+  // A function to generate a UUID.
+  uuid: Function,
+
+  // Optional props:
+  // Called when an error occurs. Defaults to console.error.
+  handleError: Function,
+  // Specifies the source type. Defaults to DELIVERY.
+  defaultSourceType: [Number, String],
+  // Specify an insertion id. Defaults to undefined.
+  insertionId: String,
+  // Specify an impression id. Defaults to generating one with the required uuid function.
+  impressionId: String,
 });
 </script>
 
@@ -28,6 +41,31 @@ export default {
   mixins: [impressionTracker],
 };
 </script>
+```
+
+### Parent Component
+
+Also reference the [Sending Engagements on Web](https://docs.promoted.ai/docs/how-to-your-web-events-with-promoted-metrics) docs.
+
+```vue
+<script setup lang="ts">
+import { createEventLogger } from 'promoted-snowplow-logger';
+import { v4 } from "uuid";
+
+const handleError = process.env.NODE_ENV !== 'production' ? (err) => { throw err; } : console.error;
+
+const logImpression = createEventLogger({
+  enabled: true,
+  platformName: 'mymarket',
+  handleError,
+}).logImpression;
+
+const uuid = v4;
+</script>
+
+<template>
+  <YourComponent :logImpression="logImpression" :uuid="uuid" :handleError="handleError">
+</template>
 ```
 
 ### Local Development
