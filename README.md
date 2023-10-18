@@ -4,6 +4,7 @@ This library is used to track impressions using a Vue mixin. It currently suppor
 
 ## Mixin
 
+```vue
 <script setup lang="ts">
 defineProps({
   logImpression: {
@@ -27,6 +28,7 @@ export default {
   mixins: [impressionTracker],
 };
 </script>
+```
 
 ### Local Development
 
