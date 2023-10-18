@@ -40,7 +40,8 @@ type PropNames =
   | "contentId"
   | "insertionId"
   | "impressionId"
-  | "logImpression";
+  | "logImpression"
+  | "logAction";
 
 type PropValues<T> = T extends "handleError"
   ? HandleErrorFunction
@@ -55,6 +56,8 @@ type PropValues<T> = T extends "handleError"
   : T extends "impressionId"
   ? string
   : T extends "logImpression"
+  ? (impression: Impression) => void
+  : T extends "logAction"
   ? (impression: Impression) => void
   : never;
 
@@ -98,6 +101,10 @@ export default Vue.extend({
     },
     defaultSourceType: {
       default: 1,
+    },
+    logAction: {
+      type: Function,
+      default: undefined,
     },
     logImpression: {
       type: Function,
@@ -146,13 +153,7 @@ export default Vue.extend({
     this.unload();
   },
   methods: {
-    logImpressionFunctor() {
-      if (this.logged || !this.active) {
-        return;
-      }
-
-      this.logged = true;
-
+    makeImpression() {
       const impression: Impression = {
         impressionId: this.impressionId || this.typedProp("uuid")(),
         sourceType: this.typedProp("defaultSourceType"),
@@ -165,8 +166,24 @@ export default Vue.extend({
       if (this.typedProp("contentId")) {
         impression.contentId = this.typedProp("contentId");
       }
-      this.typedProp("logImpression") && this.typedProp("logImpression")(impression);
+      return impression;
     },
+    logImpressionFunctor() {
+      if (this.logged || !this.active) {
+        return;
+      }
+
+      this.logged = true;
+      this.typedProp("logImpression") && this.typedProp("logImpression")(this.makeImpression());
+    },
+
+    logActionFunctor() {
+      if (!this.active) {
+        return;
+      }
+      this.typedProp("logAction") && this.typedProp("logAction")(this.makeImpression());
+    },
+
     unload() {
       this?.observer?.unobserve(this.$el);
       this.timer && clearTimeout(this.timer);

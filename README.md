@@ -54,18 +54,37 @@ import { v4 } from "uuid";
 
 const handleError = process.env.NODE_ENV !== 'production' ? (err) => { throw err; } : console.error;
 
-const logImpression = createEventLogger({
+const eventLogger = createEventLogger({
   enabled: true,
   platformName: 'mymarket',
   handleError,
-}).logImpression;
+});
+
+const logImpression = eventLogger.logImpression;
+const logAction = eventLogger.logAction;
 
 const uuid = v4;
 </script>
 
 <template>
-  <YourComponent :logImpression="logImpression" :uuid="uuid" :handleError="handleError">
+  <YourComponent :logImpression="logImpression" :logAction="logAction" :uuid="uuid" :handleError="handleError">
 </template>
+```
+
+### Click Handler Example
+
+```vue
+<script setup lang="ts">
+<template>
+  <div v-on:click="logActionFunctor">Your Content</div>
+</template>
+
+<script lang="ts">
+import impressionTracker from "vue-impression-tracker";
+export default {
+  mixins: [impressionTracker],
+};
+</script>
 ```
 
 ### Local Development

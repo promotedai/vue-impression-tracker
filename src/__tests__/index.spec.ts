@@ -192,4 +192,31 @@ describe("impressions", () => {
     component.vm.logImpressionFunctor();
     expect(logImpression).toBeCalledTimes(1);
   });
+
+  it("click action", () => {
+    const logImpression = vi.fn();
+    const logAction = vi.fn();
+    const component = mount(MockLayout, {
+      propsData: {
+        uuid,
+        contentId: "some-content-id",
+        impressionId: "test-impression-id",
+        logImpression,
+        logAction,
+      },
+    });
+
+    if (!onChange) {
+      throw new Error("IntersectionObserver onChange not mocked");
+    }
+
+    // @ts-ignore
+    component.vm.logActionFunctor();
+    expect(logImpression).not.toBeCalled();
+    expect(logAction).toBeCalledWith({
+      contentId: "some-content-id",
+      impressionId: "test-impression-id",
+      sourceType: 1,
+    });
+  });
 });
