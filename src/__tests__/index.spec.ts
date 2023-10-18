@@ -218,5 +218,14 @@ describe("impressions", () => {
       impressionId: "test-impression-id",
       sourceType: 1,
     });
+
+    // Call click with a custom impression id
+    // @ts-ignore
+    component.vm.logActionFunctor({ impressionId: "override-impression-id" });
+    expect(logAction).toBeCalledWith({
+      contentId: "some-content-id",
+      impressionId: "override-impression-id",
+      sourceType: 1,
+    });
   });
 });

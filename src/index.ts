@@ -153,7 +153,7 @@ export default Vue.extend({
     this.unload();
   },
   methods: {
-    makeImpression() {
+    makeImpression(): Impression {
       const impression: Impression = {
         impressionId: this.impressionId || this.typedProp("uuid")(),
         sourceType: this.typedProp("defaultSourceType"),
@@ -177,11 +177,17 @@ export default Vue.extend({
       this.typedProp("logImpression") && this.typedProp("logImpression")(this.makeImpression());
     },
 
-    logActionFunctor() {
+    logActionFunctor({ impressionId }: { impressionId?: string } = {}) {
       if (!this.active) {
         return;
       }
-      this.typedProp("logAction") && this.typedProp("logAction")(this.makeImpression());
+
+      const impression = this.makeImpression();
+      this.typedProp("logAction") &&
+        this.typedProp("logAction")({
+          ...impression,
+          impressionId: impressionId || impression.impressionId,
+        });
     },
 
     unload() {
