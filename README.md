@@ -20,6 +20,8 @@ defineProps({
   uuid: Function,
 
   // Optional props:
+  // The function to log an action or click.
+  logAction: Function,
   // Called when an error occurs. Defaults to console.error.
   handleError: Function,
   // Specifies the source type. Defaults to DELIVERY.
@@ -54,18 +56,47 @@ import { v4 } from "uuid";
 
 const handleError = process.env.NODE_ENV !== 'production' ? (err) => { throw err; } : console.error;
 
-const logImpression = createEventLogger({
+const eventLogger = createEventLogger({
   enabled: true,
   platformName: 'mymarket',
   handleError,
-}).logImpression;
+});
+
+const logImpression = eventLogger.logImpression;
+const logAction = eventLogger.logAction;
 
 const uuid = v4;
 </script>
 
 <template>
-  <YourComponent :logImpression="logImpression" :uuid="uuid" :handleError="handleError">
+  <YourComponent :logImpression="logImpression" :logAction="logAction" :uuid="uuid" :handleError="handleError">
 </template>
+```
+
+### Click Handler Example
+
+```vue
+<script setup lang="ts">
+defineProps({
+  logAction: Function,
+});
+</script>
+<template>
+  <div v-on:click="logActionFunctor">Your Content</div>
+  <div v-on:click="logActionFunctor({
+      impressionId: "my-custom-impression-id"
+      actionType: 2,
+      elementId: "some-element-id";
+      targetUrl: "https://mysite.com/content/123"
+    })">With a custom impression id</div>
+</template>
+
+<script lang="ts">
+import impressionTracker from "vue-impression-tracker";
+export default {
+  mixins: [impressionTracker],
+};
+</script>
 ```
 
 ### Local Development

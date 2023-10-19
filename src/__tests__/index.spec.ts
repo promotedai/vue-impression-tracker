@@ -192,4 +192,49 @@ describe("impressions", () => {
     component.vm.logImpressionFunctor();
     expect(logImpression).toBeCalledTimes(1);
   });
+
+  it("click action", () => {
+    const logImpression = vi.fn();
+    const logAction = vi.fn();
+    const component = mount(MockLayout, {
+      propsData: {
+        uuid,
+        contentId: "some-content-id",
+        impressionId: "test-impression-id",
+        logImpression,
+        logAction,
+      },
+    });
+
+    if (!onChange) {
+      throw new Error("IntersectionObserver onChange not mocked");
+    }
+
+    // @ts-ignore
+    component.vm.logActionFunctor({
+      elementId: "test-element-id",
+      customActionType: "custom-action-type",
+      targetUrl: "https://promoted.ai/test",
+    });
+    expect(logImpression).not.toBeCalled();
+    expect(logAction).toBeCalledWith({
+      contentId: "some-content-id",
+      impressionId: "test-impression-id",
+      actionType: 2,
+      customActionType: "custom-action-type",
+      elementId: "test-element-id",
+      navigateAction: {
+        targetUrl: "https://promoted.ai/test",
+      },
+    });
+
+    // Call click with a custom impression id
+    // @ts-ignore
+    component.vm.logActionFunctor({ impressionId: "override-impression-id" });
+    expect(logAction).toBeCalledWith({
+      contentId: "some-content-id",
+      impressionId: "override-impression-id",
+      actionType: 2,
+    });
+  });
 });
