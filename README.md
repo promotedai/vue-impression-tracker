@@ -83,7 +83,12 @@ defineProps({
 </script>
 <template>
   <div v-on:click="logActionFunctor">Your Content</div>
-  <div v-on:click="logActionFunctor({impressionId: "my-custom-impression-id"})">With a custom impression id</div>
+  <div v-on:click="logActionFunctor({
+      impressionId: "my-custom-impression-id"
+      actionType: 2,
+      elementId: "some-element-id";
+      targetUrl: "https://mysite.com/content/123"
+    })">With a custom impression id</div>
 </template>
 
 <script lang="ts">

@@ -211,12 +211,16 @@ describe("impressions", () => {
     }
 
     // @ts-ignore
-    component.vm.logActionFunctor();
+    component.vm.logActionFunctor({ elementId: "test-element-id", targetUrl: "https://promoted.ai/test" });
     expect(logImpression).not.toBeCalled();
     expect(logAction).toBeCalledWith({
       contentId: "some-content-id",
       impressionId: "test-impression-id",
-      sourceType: 1,
+      actionType: 2,
+      elementId: "test-element-id",
+      navigateAction: {
+        targetUrl: "https://promoted.ai/test",
+      },
     });
 
     // Call click with a custom impression id
@@ -225,7 +229,7 @@ describe("impressions", () => {
     expect(logAction).toBeCalledWith({
       contentId: "some-content-id",
       impressionId: "override-impression-id",
-      sourceType: 1,
+      actionType: 2,
     });
   });
 });
