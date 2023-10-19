@@ -211,12 +211,17 @@ describe("impressions", () => {
     }
 
     // @ts-ignore
-    component.vm.logActionFunctor({ elementId: "test-element-id", targetUrl: "https://promoted.ai/test" });
+    component.vm.logActionFunctor({
+      elementId: "test-element-id",
+      customActionType: "custom-action-type",
+      targetUrl: "https://promoted.ai/test",
+    });
     expect(logImpression).not.toBeCalled();
     expect(logAction).toBeCalledWith({
       contentId: "some-content-id",
       impressionId: "test-impression-id",
       actionType: 2,
+      customActionType: "custom-action-type",
       elementId: "test-element-id",
       navigateAction: {
         targetUrl: "https://promoted.ai/test",

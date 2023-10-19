@@ -84,6 +84,7 @@ export interface Action {
   contentId?: string;
   impressionId: string;
   actionType?: ActionTypeMap[keyof ActionTypeMap] | ActionTypeString;
+  customActionType?: string;
   elementId?: string;
   navigateAction?: {
     targetUrl?: string;
@@ -269,9 +270,11 @@ export default Vue.extend({
       elementId,
       targetUrl,
       actionType = 2,
+      customActionType,
     }: {
       impressionId?: string;
       actionType?: ActionTypeMap[keyof ActionTypeMap] | ActionTypeString;
+      customActionType?: string;
       elementId?: string;
       targetUrl?: string;
     } = {}) {
@@ -282,6 +285,7 @@ export default Vue.extend({
       const action: Action = {
         impressionId: impressionId || this.impressionId || this.typedProp("uuid")(),
         actionType,
+        customActionType,
       };
 
       if (this.typedProp("insertionId")) {
