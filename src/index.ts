@@ -94,7 +94,10 @@ export interface Action {
   };
 }
 
-export type ImpressionSourceTypeString = "UNKNOWN_IMPRESSION_SOURCE_TYPE" | "DELIVERY" | "CLIENT_BACKEND";
+export type ImpressionSourceTypeString =
+  | "UNKNOWN_IMPRESSION_SOURCE_TYPE"
+  | "DELIVERY"
+  | "CLIENT_BACKEND";
 
 export interface ImpressionSourceTypeMap {
   UNKNOWN_IMPRESSION_SOURCE_TYPE: 0;
@@ -111,7 +114,9 @@ export interface Impression {
   insertionId?: string;
   contentId?: string;
   impressionId: string;
-  sourceType?: ImpressionSourceTypeMap[keyof ImpressionSourceTypeMap] | ImpressionSourceTypeString;
+  sourceType?:
+    | ImpressionSourceTypeMap[keyof ImpressionSourceTypeMap]
+    | ImpressionSourceTypeString;
   properties?: {
     struct: any;
   };
@@ -137,7 +142,9 @@ type PropValues<T> = T extends "handleError"
   : T extends "uuid"
   ? UUIDFunction
   : T extends "defaultSourceType"
-  ? ImpressionSourceTypeMap[keyof ImpressionSourceTypeMap] | ImpressionSourceTypeString
+  ?
+      | ImpressionSourceTypeMap[keyof ImpressionSourceTypeMap]
+      | ImpressionSourceTypeString
   : T extends "contentId"
   ? string
   : T extends "insertionId"
@@ -209,7 +216,9 @@ export default Vue.extend({
     contentId: function (newContentId: string, oldContentId: string) {
       if (newContentId != oldContentId) {
         this.active = false;
-        this.handleError(new Error("Detected contentId change, not supported."));
+        this.handleError(
+          new Error("Detected contentId change, not supported.")
+        );
       }
     },
   },
@@ -226,11 +235,23 @@ export default Vue.extend({
       return;
     }
 
-    if (typeof window !== "undefined" && typeof (window as any).IntersectionObserver !== "undefined") {
+    if (
+      typeof window !== "undefined" &&
+      typeof (window as any).IntersectionObserver !== "undefined"
+    ) {
       this.observer = new IntersectionObserver((entries) => {
-        if (entries[0].intersectionRatio >= DEFAULT_VISIBILITY_RATIO_THRESHOLD && !this.logged) {
-          this.timer = setTimeout(this.logImpressionFunctor, DEFAULT_VISIBILITY_TIME_THRESHOLD);
-        } else if (entries[0].intersectionRatio < DEFAULT_VISIBILITY_RATIO_THRESHOLD && this.timer) {
+        if (
+          entries[0].intersectionRatio >= DEFAULT_VISIBILITY_RATIO_THRESHOLD &&
+          !this.logged
+        ) {
+          this.timer = setTimeout(
+            this.logImpressionFunctor,
+            DEFAULT_VISIBILITY_TIME_THRESHOLD
+          );
+        } else if (
+          entries[0].intersectionRatio < DEFAULT_VISIBILITY_RATIO_THRESHOLD &&
+          this.timer
+        ) {
           clearTimeout(this.timer);
           this.timer = null;
         }
@@ -262,7 +283,8 @@ export default Vue.extend({
         impression.contentId = this.typedProp("contentId");
       }
 
-      this.typedProp("logImpression") && this.typedProp("logImpression")(impression);
+      this.typedProp("logImpression") &&
+        this.typedProp("logImpression")(impression);
     },
 
     logActionFunctor({
@@ -283,7 +305,8 @@ export default Vue.extend({
       }
 
       const action: Action = {
-        impressionId: impressionId || this.impressionId || this.typedProp("uuid")(),
+        impressionId:
+          impressionId || this.impressionId || this.typedProp("uuid")(),
         actionType,
         customActionType,
       };
